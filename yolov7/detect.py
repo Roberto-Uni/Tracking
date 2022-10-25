@@ -15,9 +15,6 @@ from utils.plots import plot_one_box
 from utils.torch_utils import select_device, load_classifier, time_synchronized, TracedModel
 import math
 
-from numba import jit, cuda
-
-
 
 class EuclideanDistTracker:
     def __init__(self):
@@ -94,7 +91,6 @@ class EuclideanDistTracker:
         self.center_points = new_center_points.copy()
         return objects_bbs_ids, suma
 
-@jit(target_backend='cuda')    
 def detect(save_img=False):
     tracker = EuclideanDistTracker()
     Counter = 0
