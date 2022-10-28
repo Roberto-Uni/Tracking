@@ -15,6 +15,8 @@ from utils.plots import plot_one_box
 from utils.torch_utils import select_device, load_classifier, time_synchronized, TracedModel
 import math
 
+from google.colab.patches import cv2_imshow
+
 
 class EuclideanDistTracker:
     def __init__(self):
@@ -30,7 +32,8 @@ class EuclideanDistTracker:
     def update(self, objects_rect):
         # Objects boxes and ids
         objects_bbs_ids = []
-        suma = 0
+        suma_in = 0
+        suma_out = 0
 
         if not self.first:
             for id, (x, y, w, h) in enumerate(objects_rect):
@@ -41,7 +44,7 @@ class EuclideanDistTracker:
               objects_bbs_ids.append([x, y, w, h, id])
               self.id_count += 1
             self.first = True
-            return objects_bbs_ids, suma
+            return objects_bbs_ids, suma_in, suma_out
 
         # Get center point of new object
         for rect in objects_rect:
@@ -62,10 +65,10 @@ class EuclideanDistTracker:
                 objects_bbs_ids.append([x, y, w, h, id])
                 same_object_detected = True
                 if self.center_points[id][2] and not 0.875>cy:
-                  suma += 1
+                  suma_in += 1
                   self.center_points[id][2] = None
                 elif self.center_points[id][2] == False and 0.875>cy:
-                  suma -= 1
+                  suma_out += 1
                   self.center_points[id][2] = None
 
             # New object is detected we assign the ID to that object
@@ -89,11 +92,12 @@ class EuclideanDistTracker:
 
         # Update dictionary with IDs not used removed
         self.center_points = new_center_points.copy()
-        return objects_bbs_ids, suma
+        return objects_bbs_ids, suma_in, suma_out
 
 def detect(save_img=False):
     tracker = EuclideanDistTracker()
-    Counter = 0
+    Counter_in = 0
+    Counter_out = 0
 
     source, weights, view_img, save_txt, imgsz, trace = opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size, not opt.no_trace
     save_img = not opt.nosave and not source.endswith('.txt')  # save inference images
@@ -195,15 +199,15 @@ def detect(save_img=False):
                     n = (det[:, -1] == c).sum()  # detections per class
                     s += f"{n} {names[int(c)]}{'s' * (n > 1)}, "  # add to string
 
-                # Write results
-                l = []
-                for *xyxy, conf, cls in reversed(det):
-                    if save_txt:  # Write to file
-                        xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
-                        l.append(xywh)
-                ids, suma = tracker.update(l)
-                Counter += suma
                 if save_img or view_img:  # Add bbox to image
+                  # Write results
+                  l = []
+                  for *xyxy, conf, cls in reversed(det):
+                          xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
+                          l.append(xywh)
+                  ids, suma_in, suma_out = tracker.update(l)
+                  Counter_in += suma_in
+                  Counter_out += suma_out
                   i = 0
                   for *xyxy, conf, cls in reversed(det):
                     label = f'{ids[i][4]}'
@@ -222,11 +226,18 @@ def detect(save_img=False):
             (y,x,z) = im0.shape
             cv2.line(img=im0, pt1=(0, y-120), pt2=(x, y-120), color =(0, 255, 0), thickness=5, lineType=8, shift=0)
             
-            h = len('Counter: '+str(Counter))
-            cv2.rectangle(im0, (10-5, 10-5), (19*h+5, 50+5), (0, 0, 0), -1)  # background rectangle for on-screen text
-            cv2.rectangle(im0, (10, 10), (19*h, 50), (255, 255, 255), -1)  # background rectangle for on-screen text
-            cv2.putText(im0, "Counter: " + str(Counter), (15, 38), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 0), 1)
+            h1 = len('Entren: '+str(Counter_in))
+            h2 = len('Surten: '+str(Counter_out))
             
+            maxim = max(h1,h2)
+
+            cv2.rectangle(im0, (10-5, 10-5), (19*maxim+5, 90+5), (0, 0, 0), -1)  
+            cv2.rectangle(im0, (10, 10), (19*maxim, 90), (255, 255, 255), -1)  
+    
+            cv2.putText(im0, "Entren: " + str(Counter_in), (15, 38), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 0), 1)
+            cv2.putText(im0, "Surten: " + str(Counter_out), (15, 80), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 0), 1)
+
+
             # Save results (image with detections)
             if save_img:
                 if dataset.mode == 'image':
