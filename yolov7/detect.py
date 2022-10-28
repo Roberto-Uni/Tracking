@@ -15,7 +15,7 @@ from utils.plots import plot_one_box
 from utils.torch_utils import select_device, load_classifier, time_synchronized, TracedModel
 import math
 
-from google.colab.patches import cv2_imshow
+#from google.colab.patches import cv2_imshow
 
 
 class EuclideanDistTracker:
