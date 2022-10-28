@@ -218,11 +218,6 @@ def detect(save_img=False):
             # Print time (inference + NMS)
             print(f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS')
 
-            # Stream results
-            if view_img:
-                cv2.imshow(str(p), im0)
-                cv2.waitKey(1)  # 1 millisecond
-
             (y,x,z) = im0.shape
             cv2.line(img=im0, pt1=(0, y-120), pt2=(x, y-120), color =(0, 255, 0), thickness=5, lineType=8, shift=0)
             
@@ -237,6 +232,10 @@ def detect(save_img=False):
             cv2.putText(im0, "Entren: " + str(Counter_in), (15, 38), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 0), 1)
             cv2.putText(im0, "Surten: " + str(Counter_out), (15, 80), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 0), 1)
 
+            # Stream results
+            if view_img:
+                cv2.imshow(str(p), im0)
+                cv2.waitKey(1)  # 1 millisecond
 
             # Save results (image with detections)
             if save_img:
