@@ -211,7 +211,7 @@ def detect(save_img=False):
                   i = 0
                   for *xyxy, conf, cls in reversed(det):
                     label = f'{ids[i][4]}'
-                    plot_one_box(xyxy, im0, label=label, color=colors[0], line_thickness=1)
+                    plot_one_box(xyxy, im0, label=label, color=(242,190,0), line_thickness=1)
                     i += 1
               
               
