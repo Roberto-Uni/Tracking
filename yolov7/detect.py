@@ -66,10 +66,10 @@ class EuclideanDistTracker:
                 same_object_detected = True
                 if self.center_points[id][2] and not 0.875>cy:
                   suma_in += 1
-                  self.center_points[id][2] = None
+                  self.center_points[id][2] = False
                 elif self.center_points[id][2] == False and 0.875>cy:
                   suma_out += 1
-                  self.center_points[id][2] = None
+                  self.center_points[id][2] = True
 
             # New object is detected we assign the ID to that object
             if same_object_detected is False:
